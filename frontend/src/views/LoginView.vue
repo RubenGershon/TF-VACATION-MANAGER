@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { errorMessage } from '../api/http'
 import AlertMessage from '../components/AlertMessage.vue'
+import BrandLogo from '../components/BrandLogo.vue'
 
 const store = useStore()
 const router = useRouter()
@@ -31,9 +32,9 @@ async function submit() {
 <template>
   <div class="flex min-h-screen items-center justify-center bg-linear-to-br from-indigo-50 via-white to-sky-50 p-4">
     <form class="card w-full max-w-sm space-y-4 p-8 shadow-lg" @submit.prevent="submit">
-      <div>
-        <h1 class="text-2xl font-semibold text-indigo-600">Vacation Manager</h1>
-        <p class="text-sm text-slate-500">Log in to continue</p>
+      <div class="space-y-3">
+        <BrandLogo large />
+        <p class="text-sm text-slate-500">Welcome back. Log in to manage your time off.</p>
       </div>
 
       <label class="block text-sm">

@@ -1,4 +1,4 @@
-# Vacation Management
+# Away
 
 A web app to manage vacation requests.
 - **Requesters** submit requests, follow their status, cancel pending requests, track their remaining vacation days and see the team vacations in a month calendar.

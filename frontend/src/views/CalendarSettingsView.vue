@@ -64,7 +64,7 @@ function formatMonthDay(monthDay) {
 <template>
   <main class="mx-auto max-w-5xl space-y-4 p-4">
     <div>
-      <h1 class="text-xl font-semibold text-slate-900">Work calendar</h1>
+      <h1 class="text-xl font-semibold text-slate-900">Settings</h1>
       <p class="text-sm text-slate-500">Non-working days are not counted as vacation days.</p>
     </div>
 

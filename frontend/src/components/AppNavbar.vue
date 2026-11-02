@@ -3,12 +3,14 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import BrandLogo from './BrandLogo.vue'
 
 const store = useStore()
 const router = useRouter()
 
 const user = computed(() => store.state.auth.user)
 const isValidator = computed(() => store.getters['auth/isValidator'])
+const roleLabel = computed(() => (isValidator.value ? 'Validator' : 'Requester'))
 // "Victor Validator" becomes "VV".
 const initials = computed(() =>
   user.value.name
@@ -42,11 +44,11 @@ async function logout() {
   <nav class="sticky top-0 z-10 border-b border-slate-200 bg-white/80 backdrop-blur">
     <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3">
       <div class="flex items-center gap-5 text-sm">
-        <span class="text-base font-semibold text-indigo-600">Vacation Manager</span>
+        <BrandLogo />
         <router-link v-if="isValidator" to="/dashboard" class="text-slate-500 hover:text-indigo-600" active-class="font-medium text-indigo-600">Dashboard</router-link>
         <router-link v-else to="/my-requests" class="text-slate-500 hover:text-indigo-600" active-class="font-medium text-indigo-600">My requests</router-link>
         <router-link to="/team" class="text-slate-500 hover:text-indigo-600" active-class="font-medium text-indigo-600">Team</router-link>
-        <router-link v-if="isValidator" to="/calendar-settings" class="text-slate-500 hover:text-indigo-600" active-class="font-medium text-indigo-600">Work calendar</router-link>
+        <router-link v-if="isValidator" to="/calendar-settings" class="text-slate-500 hover:text-indigo-600" active-class="font-medium text-indigo-600">Settings</router-link>
       </div>
       <div ref="menu" class="relative">
         <button
@@ -57,7 +59,9 @@ async function logout() {
           {{ initials }}
         </button>
         <div v-if="menuOpen" class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
-          <p class="px-3 py-2 text-sm text-slate-500">{{ user.name }}</p>
+          <p class="px-3 pt-2 text-sm font-medium text-slate-900">{{ user.name }}</p>
+          <p class="px-3 pb-2 text-xs text-slate-500">{{ roleLabel }}</p>
+          <div class="my-1 border-t border-slate-200"></div>
           <button class="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50" @click="logout">
             Log out
           </button>

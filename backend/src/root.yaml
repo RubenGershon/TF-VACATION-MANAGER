@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Vacation Management API
+  title: Away API
   version: 1.0.0
   description: 'POST /auth/login sets an HttpOnly cookie named token. The browser sends it back on every request.'
 paths:
