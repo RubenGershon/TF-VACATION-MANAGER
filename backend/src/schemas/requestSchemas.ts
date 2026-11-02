@@ -7,11 +7,19 @@ import { RequestStatus } from "../entities/VacationRequest";
 // Dates must be real calendar dates written as YYYY-MM-DD (so "2030-02-31" is refused).
 const isoDate = z.iso.date("Date must use the format YYYY-MM-DD");
 
-export const createRequestSchema = z.object({
-	startDate: isoDate,
-	endDate: isoDate,
-	reason: z.string().trim().max(500, "Reason must be 500 characters or less").optional()
-});
+const MAX_RANGE_DAYS = 366;
+
+// The range is capped so a huge range cannot make the server count days for seconds.
+export const createRequestSchema = z
+	.object({
+		startDate: isoDate,
+		endDate: isoDate,
+		reason: z.string().trim().max(500, "Reason must be 500 characters or less").optional()
+	})
+	.refine(
+		({ startDate, endDate }) => (Date.parse(endDate) - Date.parse(startDate)) / 86_400_000 < MAX_RANGE_DAYS,
+		{ message: `A request cannot cover more than ${MAX_RANGE_DAYS} days`, path: ["endDate"] }
+	);
 
 export const rejectRequestSchema = z.object({
 	comment: z.string().trim().min(1, "A comment is required to reject a request")

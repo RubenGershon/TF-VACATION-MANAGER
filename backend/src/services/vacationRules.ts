@@ -17,6 +17,10 @@ export function assertValidDates(startDate: string, endDate: string, currentDate
 	if (endDate < startDate) {
 		throw badRequest("End date cannot be before start date");
 	}
+	// Days are counted against the year of the start date, so a request cannot cross New Year.
+	if (startDate.slice(0, 4) !== endDate.slice(0, 4)) {
+		throw badRequest("A request cannot span two years. Please submit one request per year");
+	}
 }
 
 // A request made only of weekends and holidays would use no vacation day, so it is refused.

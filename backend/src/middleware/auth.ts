@@ -13,6 +13,17 @@ export type AuthUser = {
 const COOKIE_NAME = "token";
 const SESSION_SECONDS = Number(process.env.SESSION_HOURS ?? 8) * 3600;
 
+// Called at boot: refuses to start with a missing secret or an invalid session length,
+// instead of failing on the first login.
+export function assertAuthConfig(): void {
+	if (!process.env.JWT_SECRET) {
+		throw new Error("JWT_SECRET is not set");
+	}
+	if (!Number.isFinite(SESSION_SECONDS) || SESSION_SECONDS <= 0) {
+		throw new Error("SESSION_HOURS must be a positive number");
+	}
+}
+
 // Creates the JWT. It holds the id, name and role, so protected requests do not need a database lookup.
 export function signToken(user: AuthUser): string {
 	return jwt.sign(user, process.env.JWT_SECRET as string, { expiresIn: SESSION_SECONDS });

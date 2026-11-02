@@ -55,6 +55,10 @@ describe("assertValidDates", () => {
 	it("refuses an end date before the start date", () => {
 		assert.throws(() => assertValidDates("2030-07-05", "2030-07-01", TODAY), { status: 400 });
 	});
+
+	it("refuses a request that spans two years", () => {
+		assert.throws(() => assertValidDates("2030-12-30", "2031-01-02", TODAY), { status: 400 });
+	});
 });
 
 describe("assertEnoughDays", () => {

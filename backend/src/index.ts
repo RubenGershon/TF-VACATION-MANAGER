@@ -18,8 +18,11 @@ import {
 import { CommonEvent, LambdaEvent } from "commoneventframework/dist/types/commonEvent";
 import { initDatabase } from "./db/dataSource";
 import { toErrorResponse } from "./errors/toErrorResponse";
-import { HandlerFn, InputParserFn } from "./handlers/types";
 import { registerVacationListeners } from "./events/vacationListeners";
+import { HandlerFn, InputParserFn } from "./handlers/types";
+import { assertAuthConfig } from "./middleware/auth";
+
+assertAuthConfig();
 
 // Starts listening to vacation events once, when the server boots.
 registerVacationListeners();
