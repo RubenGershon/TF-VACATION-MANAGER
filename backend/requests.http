@@ -1,0 +1,173 @@
+### Vacation API examples (VS Code "REST Client" extension).
+### 1. Run the three login requests first.
+### 2. Each login answers with a Set-Cookie header. We keep it in a variable and send it back in the Cookie header.
+### 3. Tip: in the REST Client settings, turn off "Remember Cookies For Subsequent Requests",
+###    so the cookie of one user is never mixed with the cookie of another.
+
+@baseUrl = http://localhost:8888
+@contentType = application/json
+
+### Login as requester (Alice)
+# @name loginRequester
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{ "email": "alice@example.com", "password": "password123" }
+
+###
+@requesterCookie = {{loginRequester.response.headers.Set-Cookie}}
+
+### Login as requester (Bob)
+# @name loginBob
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{ "email": "bob@example.com", "password": "password123" }
+
+###
+@bobCookie = {{loginBob.response.headers.Set-Cookie}}
+
+### Login as validator (Victor)
+# @name loginValidator
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{ "email": "victor@example.com", "password": "password123" }
+
+###
+@validatorCookie = {{loginValidator.response.headers.Set-Cookie}}
+
+### Wrong password (expect 401)
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{ "email": "alice@example.com", "password": "wrong" }
+
+### Current user
+GET {{baseUrl}}/me
+Cookie: {{requesterCookie}}
+
+### No cookie (expect 401)
+GET {{baseUrl}}/me
+
+### Logout (the answer clears the cookie)
+POST {{baseUrl}}/auth/logout
+
+### ---------- Requester ----------
+
+### Submit a request (change the dates to future dates)
+POST {{baseUrl}}/requests
+Cookie: {{requesterCookie}}
+Content-Type: {{contentType}}
+
+{ "startDate": "2030-07-01", "endDate": "2030-07-10", "reason": "Summer holiday" }
+
+### Rule: end date cannot be before start date (expect 400)
+POST {{baseUrl}}/requests
+Cookie: {{requesterCookie}}
+Content-Type: {{contentType}}
+
+{ "startDate": "2030-08-10", "endDate": "2030-08-01" }
+
+### Rule: no requests in the past (expect 400)
+POST {{baseUrl}}/requests
+Cookie: {{requesterCookie}}
+Content-Type: {{contentType}}
+
+{ "startDate": "2020-01-01", "endDate": "2020-01-05" }
+
+### Rule: no overlap, run after the first request (expect 409)
+POST {{baseUrl}}/requests
+Cookie: {{requesterCookie}}
+Content-Type: {{contentType}}
+
+{ "startDate": "2030-07-05", "endDate": "2030-07-15" }
+
+### Validation: missing dates (expect 400)
+POST {{baseUrl}}/requests
+Cookie: {{requesterCookie}}
+Content-Type: {{contentType}}
+
+{ "reason": "No dates" }
+
+### As a requester: list my requests (a requester only ever sees their own, even with userId in the URL)
+GET {{baseUrl}}/requests?page=1&limit=10
+Cookie: {{requesterCookie}}
+
+### As a validator: list all requests
+GET {{baseUrl}}/requests?page=1&limit=10
+Cookie: {{validatorCookie}}
+
+### My vacation days this year (allowance, used, remaining)
+GET {{baseUrl}}/requests/balance
+Cookie: {{requesterCookie}}
+
+### Rule: not enough vacation days left (expect 400 when the request is longer than the days left)
+POST {{baseUrl}}/requests
+Cookie: {{requesterCookie}}
+Content-Type: {{contentType}}
+
+{ "startDate": "2030-01-01", "endDate": "2030-03-31" }
+
+### Cancel my pending request 1 (as Alice. Bob gets 404, a validator gets 403, an approved request gets 409)
+PUT {{baseUrl}}/requests/1/cancel
+Cookie: {{requesterCookie}}
+
+### Team vacations (any role)
+GET {{baseUrl}}/team/vacations
+Cookie: {{requesterCookie}}
+
+### ---------- Validator ----------
+
+### All requests, no filter
+GET {{baseUrl}}/requests?page=1&limit=10
+Cookie: {{validatorCookie}}
+
+### Filter by status
+GET {{baseUrl}}/requests?status=PENDING
+Cookie: {{validatorCookie}}
+
+### Filter by user
+GET {{baseUrl}}/requests?userId=1
+Cookie: {{validatorCookie}}
+
+### List of users for the filter
+GET {{baseUrl}}/users
+Cookie: {{validatorCookie}}
+
+### Requester cannot list all requests (expect 403)
+GET {{baseUrl}}/requests
+Cookie: {{requesterCookie}}
+
+### Approve request 1
+PUT {{baseUrl}}/requests/1/approve
+Cookie: {{validatorCookie}}
+
+### Rule: approved request cannot be changed (expect 409)
+PUT {{baseUrl}}/requests/1/reject
+Cookie: {{validatorCookie}}
+Content-Type: {{contentType}}
+
+{ "comment": "Too late" }
+
+### Rule: reject needs a comment (expect 400)
+PUT {{baseUrl}}/requests/2/reject
+Cookie: {{validatorCookie}}
+Content-Type: {{contentType}}
+
+{ "comment": "" }
+
+### Reject request 2 with a comment
+PUT {{baseUrl}}/requests/2/reject
+Cookie: {{validatorCookie}}
+Content-Type: {{contentType}}
+
+{ "comment": "Team is understaffed that week" }
+
+### Rule: only validators can approve (expect 403)
+PUT {{baseUrl}}/requests/2/approve
+Cookie: {{requesterCookie}}
+
+### Unknown request (expect 404)
+PUT {{baseUrl}}/requests/9999/approve
+Cookie: {{validatorCookie}}
