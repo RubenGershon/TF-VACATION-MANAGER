@@ -1,0 +1,58 @@
+﻿/* Global styles: Tailwind, pointer cursors, date inputs, and the shared button, input and card classes. */
+@import "tailwindcss";
+
+/* Tailwind v4 no longer sets pointer cursors on buttons */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="date"]:not(:disabled),
+  label[for] {
+    cursor: pointer;
+  }
+}
+
+/* Stretch the native picker icon over the whole field so any click opens it */
+input[type="date"] {
+  position: relative;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Shared look for buttons, inputs and cards, so views stay short */
+@utility btn {
+  @apply rounded-lg px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-indigo-600 text-white shadow-sm hover:bg-indigo-700;
+}
+
+@utility btn-success {
+  @apply btn bg-emerald-600 text-white shadow-sm hover:bg-emerald-700;
+}
+
+@utility btn-danger {
+  @apply btn bg-rose-600 text-white shadow-sm hover:bg-rose-700;
+}
+
+@utility btn-secondary {
+  @apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50;
+}
+
+@utility input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none;
+}
+
+@utility card {
+  @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm;
+}
