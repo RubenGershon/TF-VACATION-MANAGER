@@ -7,7 +7,11 @@ const props = defineProps({
   balance: { type: Object, required: true },
 })
 
-const usedPercent = computed(() => Math.min(100, (props.balance.used / props.balance.allowance) * 100))
+const usedPercent = computed(() => {
+  const { used, allowance } = props.balance
+  if (!allowance) return used > 0 ? 100 : 0
+  return Math.min(100, (used / allowance) * 100)
+})
 </script>
 
 <template>

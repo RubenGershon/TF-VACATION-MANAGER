@@ -3,6 +3,15 @@ import * as authApi from '../../api/authApi'
 
 const USER_KEY = 'user'
 
+// Corrupted or unavailable storage must not crash the app at startup: treat it as logged out.
+function readSavedUser() {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY) ?? 'null')
+  } catch {
+    return null
+  }
+}
+
 // The Vuex module for the session. Components read the user from here and never touch localStorage.
 // The login token is NOT stored here. It is in an HttpOnly cookie that JavaScript cannot read.
 export default {
@@ -11,7 +20,7 @@ export default {
   // Only the user's public data is kept in localStorage, so the page knows who is logged in after a refresh.
   // If the cookie has expired, the first API call answers 401 and the session is cleared (see main.js).
   state: () => ({
-    user: JSON.parse(localStorage.getItem(USER_KEY) ?? 'null'),
+    user: readSavedUser(),
   }),
 
   getters: {

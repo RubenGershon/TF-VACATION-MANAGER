@@ -1,7 +1,11 @@
 // Store module for vacation requests, balance, team vacations and the requesters list.
 import * as requestApi from '../../api/requestApi'
 
-// The Vuex module for request data: the current page of requests, the balance and the user filter list.
+// Counters that identify the latest call of each loader, to ignore stale responses.
+let listTicket = 0
+let teamTicket = 0
+
+// The Vuex module for request data: the current page of requests, the team vacations and the user filter list.
 // Actions call the API layer. Mutations are the only place that changes the state.
 export default {
   namespaced: true,
@@ -10,8 +14,8 @@ export default {
     // One page of requests: { items, total, page, limit }
     list: { items: [], total: 0, page: 1, limit: 10 },
     loading: false,
-    requesters: [],
     teamVacations: [],
+    requesters: [],
     // The requester's vacation days: { year, allowance, used, remaining }
     balance: null,
   }),
@@ -26,11 +30,11 @@ export default {
     setLoading(state, loading) {
       state.loading = loading
     },
-    setRequesters(state, requesters) {
-      state.requesters = requesters
-    },
     setTeamVacations(state, teamVacations) {
       state.teamVacations = teamVacations
+    },
+    setRequesters(state, requesters) {
+      state.requesters = requesters
     },
   },
 
@@ -38,12 +42,15 @@ export default {
     // Loads a page of requests. "fetch" is the API function that returns the page.
     // The "my requests" page and the validator dashboard share one list, because only one is shown at a time.
     // "loading" is switched off in finally, so it also stops when the request fails.
+    // Only the latest call may write the result: a slow, older response must not overwrite a newer one.
     async loadList({ commit }, fetch) {
+      const ticket = ++listTicket
       commit('setLoading', true)
       try {
-        commit('setList', await fetch())
+        const result = await fetch()
+        if (ticket === listTicket) commit('setList', result)
       } finally {
-        commit('setLoading', false)
+        if (ticket === listTicket) commit('setLoading', false)
       }
     },
     loadRequests({ dispatch }, params) {
@@ -65,7 +72,9 @@ export default {
       commit('setBalance', await requestApi.fetchBalance())
     },
     async loadTeamVacations({ commit }, params) {
-      commit('setTeamVacations', await requestApi.fetchTeamVacations(params))
+      const ticket = ++teamTicket
+      const result = await requestApi.fetchTeamVacations(params)
+      if (ticket === teamTicket) commit('setTeamVacations', result)
     },
     async loadRequesters({ commit }) {
       commit('setRequesters', await requestApi.fetchRequesters())

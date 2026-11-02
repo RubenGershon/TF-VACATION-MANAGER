@@ -30,6 +30,12 @@ async function load() {
       status: status.value || undefined,
       userId: userId.value || undefined,
     })
+    // If the last row of a later page was just actioned, that page no longer exists: go back to the last one.
+    const lastPage = Math.max(1, Math.ceil(list.value.total / PAGE_SIZE))
+    if (page.value > lastPage) {
+      page.value = lastPage
+      await load()
+    }
   } catch (e) {
     error.value = errorMessage(e)
   }
