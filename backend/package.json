@@ -1,0 +1,29 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "dev": "cef-gen-handlers && ts-node-dev --respawn src/index.ts --local",
+    "migration:generate": "typeorm-ts-node-commonjs -d src/db/dataSource.ts migration:generate",
+    "seed": "ts-node src/db/seed.ts",
+    "test": "cef-gen-handlers && node --require ts-node/register --test --test-concurrency=1 src/tests/*.test.ts"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "commoneventframework": "^1.0.19",
+    "dotenv": "^18.0.9",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^1.1.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.6",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
+  }
+}
