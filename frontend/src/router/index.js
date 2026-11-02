@@ -1,6 +1,7 @@
 // Routes of the app and the guard that redirects guests and users of the wrong role.
 import { createRouter, createWebHistory } from 'vue-router'
 import store from '../store'
+import DashboardView from '../views/DashboardView.vue'
 import LoginView from '../views/LoginView.vue'
 import MyRequestsView from '../views/MyRequestsView.vue'
 
@@ -18,6 +19,7 @@ const routes = [
   { path: '/', redirect: () => homeFor(store.getters['auth/role']) },
   { path: '/login', component: LoginView, meta: { guestOnly: true } },
   { path: '/my-requests', component: MyRequestsView, meta: { role: REQUESTER } },
+  { path: '/dashboard', component: DashboardView, meta: { role: VALIDATOR } },
   // Placeholder for the pages that do not exist yet
   { path: '/:pathMatch(.*)*', component: { template: '<h1 class="p-6 text-xl font-semibold">Coming soon</h1>' } },
 ]
