@@ -39,12 +39,14 @@ defineEmits(['approve', 'reject', 'cancel'])
           <td class="py-2 pr-4"><StatusBadge :status="request.status" /></td>
           <td class="py-2 pr-4">{{ request.comments || '-' }}</td>
           <td v-if="showActions || canCancel" class="py-2 whitespace-nowrap">
-            <div v-if="request.status === 'PENDING'" class="flex gap-2">
-              <template v-if="showActions">
-                <button class="btn-success" @click="$emit('approve', request)">Approve</button>
-                <button class="btn-danger" @click="$emit('reject', request)">Reject</button>
+            <div class="flex h-9 items-center gap-2" :class="{ 'invisible': request.status !== 'PENDING' }">
+              <template v-if="request.status === 'PENDING'">
+                <template v-if="showActions">
+                  <button class="btn-success" @click="$emit('approve', request)">Approve</button>
+                  <button class="btn-danger" @click="$emit('reject', request)">Reject</button>
+                </template>
+                <button v-if="canCancel" class="btn-secondary" @click="$emit('cancel', request)">Cancel</button>
               </template>
-              <button v-if="canCancel" class="btn-secondary" @click="$emit('cancel', request)">Cancel</button>
             </div>
           </td>
         </tr>
