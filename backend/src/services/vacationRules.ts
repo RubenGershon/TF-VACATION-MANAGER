@@ -1,4 +1,4 @@
-// Pure vacation rules (dates and allowance) with no database access.
+// Pure vacation rules (dates, working days, allowance) with no database access.
 import { badRequest } from "../errors/AppError";
 
 // The business rules that need no database. Keeping them here makes them easy to read and to test.
@@ -16,6 +16,13 @@ export function assertValidDates(startDate: string, endDate: string, currentDate
 	}
 	if (endDate < startDate) {
 		throw badRequest("End date cannot be before start date");
+	}
+}
+
+// A request made only of weekends and holidays would use no vacation day, so it is refused.
+export function assertHasWorkingDays(days: number): void {
+	if (days < 1) {
+		throw badRequest("These dates contain no working day, so there is nothing to book");
 	}
 }
 

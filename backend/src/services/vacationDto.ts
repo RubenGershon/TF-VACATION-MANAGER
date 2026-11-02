@@ -9,6 +9,7 @@ export function toDto(request: VacationRequest) {
 		userName: request.user?.name,
 		startDate: request.startDate,
 		endDate: request.endDate,
+		days: request.days,
 		reason: request.reason,
 		status: request.status,
 		comments: request.comments,

@@ -1,4 +1,4 @@
-// Validation of the vacation request inputs: new request, id and list filters.
+// Validation of the vacation request inputs: new request, reject comment, id, list filters and team range.
 import { z } from "zod";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "../config";
 import { RequestStatus } from "../entities/VacationRequest";
@@ -34,6 +34,12 @@ export const listRequestsSchema = z.object({
 	userId: z.coerce.number().int().positive().optional()
 });
 
+export const teamVacationsSchema = z.object({
+	from: isoDate.optional(),
+	to: isoDate.optional()
+});
+
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;
 export type RejectRequestInput = z.infer<typeof rejectRequestSchema>;
 export type ListRequestsInput = z.infer<typeof listRequestsSchema>;
+export type TeamVacationsInput = z.infer<typeof teamVacationsSchema>;

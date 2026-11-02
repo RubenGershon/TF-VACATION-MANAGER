@@ -3,8 +3,11 @@
 import { registerHandlerRefs } from "commoneventframework";
 
 import * as __cef_handlers_auth from "../handlers/auth";
+import * as __cef_handlers_calendar from "../handlers/calendar";
 import * as __cef_handlers_health from "../handlers/health";
 import * as __cef_handlers_requests from "../handlers/requests";
+import * as __cef_handlers_team from "../handlers/team";
+import * as __cef_handlers_users from "../handlers/users";
 
 export class HandlerRegistry {
 	static register(): void {
@@ -13,6 +16,13 @@ export class HandlerRegistry {
 			"handlers/auth#login": __cef_handlers_auth.login,
 			"handlers/auth#logout": __cef_handlers_auth.logout,
 			"handlers/auth#parseLogin": __cef_handlers_auth.parseLogin,
+			"handlers/calendar#addSpecialDay": __cef_handlers_calendar.addSpecialDay,
+			"handlers/calendar#deleteSpecialDay": __cef_handlers_calendar.deleteSpecialDay,
+			"handlers/calendar#getCalendar": __cef_handlers_calendar.getCalendar,
+			"handlers/calendar#parseAddSpecialDay": __cef_handlers_calendar.parseAddSpecialDay,
+			"handlers/calendar#parseSetWeek": __cef_handlers_calendar.parseSetWeek,
+			"handlers/calendar#parseSpecialDayId": __cef_handlers_calendar.parseSpecialDayId,
+			"handlers/calendar#setWeek": __cef_handlers_calendar.setWeek,
 			"handlers/health#getHealth": __cef_handlers_health.getHealth,
 			"handlers/requests#approveRequest": __cef_handlers_requests.approveRequest,
 			"handlers/requests#cancelRequest": __cef_handlers_requests.cancelRequest,
@@ -24,6 +34,9 @@ export class HandlerRegistry {
 			"handlers/requests#parseRejectRequest": __cef_handlers_requests.parseRejectRequest,
 			"handlers/requests#parseRequestId": __cef_handlers_requests.parseRequestId,
 			"handlers/requests#rejectRequest": __cef_handlers_requests.rejectRequest,
+			"handlers/team#getTeamVacations": __cef_handlers_team.getTeamVacations,
+			"handlers/team#parseTeamVacations": __cef_handlers_team.parseTeamVacations,
+			"handlers/users#listRequesters": __cef_handlers_users.listRequesters,
 		});
 	}
 }

@@ -2,6 +2,7 @@ openapi: 3.0.3
 info:
   title: Vacation Management API
   version: 1.0.0
+  description: 'POST /auth/login sets an HttpOnly cookie named token. The browser sends it back on every request.'
 paths:
   /health:
     get:
@@ -144,3 +145,78 @@ paths:
           description: Request not found, or not mine
         '409':
           description: Request is not pending
+
+  /team/vacations:
+    get:
+      x-handler: handlers/team#getTeamVacations
+      x-inputParser: handlers/team#parseTeamVacations
+      summary: Approved vacations of the whole team (any role)
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of approved vacations
+
+  /calendar:
+    get:
+      x-handler: handlers/calendar#getCalendar
+      summary: Company work calendar - weekly days off and special days (any role)
+      responses:
+        '200':
+          description: The calendar
+
+  /calendar/week:
+    put:
+      x-handler: handlers/calendar#setWeek
+      x-inputParser: handlers/calendar#parseSetWeek
+      summary: Set the weekly non-working days, ISO 1-7 (validator)
+      responses:
+        '200':
+          description: The updated calendar
+        '400':
+          description: Invalid weekdays
+
+  /calendar/special-days:
+    post:
+      x-handler: handlers/calendar#addSpecialDay
+      x-inputParser: handlers/calendar#parseAddSpecialDay
+      summary: Add a holiday or event that repeats every year (validator)
+      responses:
+        '201':
+          description: The updated calendar
+        '409':
+          description: A special day already exists on this date
+
+  /calendar/special-days/:id:
+    delete:
+      x-handler: handlers/calendar#deleteSpecialDay
+      x-inputParser: handlers/calendar#parseSpecialDayId
+      summary: Delete a special day (validator)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The updated calendar
+        '404':
+          description: Special day not found
+
+  /users:
+    get:
+      x-handler: handlers/users#listRequesters
+      summary: List requesters, used by the validator user filter (validator)
+      responses:
+        '200':
+          description: List of users

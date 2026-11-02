@@ -1,17 +1,37 @@
-// Unit tests of the pure vacation rules and of day counting (no database needed).
+// Unit tests of the pure vacation rules and of working-day counting (no database needed).
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { assertEnoughDays, assertValidDates } from "../services/vacationRules";
-import { countDays } from "../utils/dates";
+import { assertEnoughDays, assertHasWorkingDays, assertValidDates } from "../services/vacationRules";
+import { countWorkingDays } from "../utils/dates";
 
 // These tests need no database: the rules are plain functions.
 
 const TODAY = "2030-06-15";
 
-describe("countDays", () => {
-	it("counts both the first and the last day", () => {
-		assert.equal(countDays("2030-07-01", "2030-07-01"), 1);
-		assert.equal(countDays("2030-07-01", "2030-07-05"), 5);
+describe("countWorkingDays", () => {
+	const calendar = { nonWorkingWeekdays: [6, 7], holidays: ["12-25"] };
+
+	it("skips weekends", () => {
+		// Monday 2030-07-01 to Sunday 2030-07-07
+		assert.equal(countWorkingDays("2030-07-01", "2030-07-07", calendar), 5);
+	});
+
+	it("skips holidays, whatever the year", () => {
+		// Tuesday 2029-12-25 and Wednesday 2030-12-25
+		assert.equal(countWorkingDays("2029-12-24", "2029-12-26", calendar), 2);
+		assert.equal(countWorkingDays("2030-12-25", "2030-12-25", calendar), 0);
+	});
+
+	it("uses the configured weekdays", () => {
+		const fridayOff = { nonWorkingWeekdays: [5, 6, 7], holidays: [] };
+		assert.equal(countWorkingDays("2030-07-01", "2030-07-07", fridayOff), 4);
+	});
+});
+
+describe("assertHasWorkingDays", () => {
+	it("refuses a request with no working day", () => {
+		assert.throws(() => assertHasWorkingDays(0), { status: 400 });
+		assert.doesNotThrow(() => assertHasWorkingDays(1));
 	});
 });
 

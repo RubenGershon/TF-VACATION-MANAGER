@@ -1,4 +1,4 @@
-// Table "vacation_requests": one row per request, with its dates, status and the validator's comment.
+// Table "vacation_requests": one row per request, with its dates, working days, status and the validator's comment.
 import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { User } from "./User";
 
@@ -31,6 +31,10 @@ export class VacationRequest {
 
 	@Column({ name: "end_date", type: "date" })
 	endDate: string;
+
+	// Working days used by this request, fixed when it is created so later calendar changes do not alter it.
+	@Column({ type: "int" })
+	days: number;
 
 	@Column({ type: "text", nullable: true })
 	reason: string | null;

@@ -1,15 +1,16 @@
-// Vacation request logic: creating, listing, approving, rejecting and cancelling requests, and the balance.
+// Vacation request logic: creating, listing, approving, rejecting and cancelling requests, the balance and the team vacations.
 import { FindOptionsWhere, In, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../db/dataSource";
 import { User } from "../entities/User";
 import { RequestStatus, VacationRequest } from "../entities/VacationRequest";
 import { conflict, notFound, unauthorized } from "../errors/AppError";
 import { VacationEvent, VacationEventPayload, vacationEvents } from "../events/vacationEvents";
-import { CreateRequestInput, ListRequestsInput } from "../schemas/requestSchemas";
-import { countDays } from "../utils/dates";
+import { CreateRequestInput, ListRequestsInput, TeamVacationsInput } from "../schemas/requestSchemas";
+import { countWorkingDays } from "../utils/dates";
 import { pageToSkip, toPage } from "../utils/pagination";
+import { getWorkCalendar } from "./calendarService";
 import { toDto } from "./vacationDto";
-import { assertEnoughDays, assertValidDates } from "./vacationRules";
+import { assertEnoughDays, assertHasWorkingDays, assertValidDates, today } from "./vacationRules";
 
 const requests = () => AppDataSource.getRepository(VacationRequest);
 
@@ -30,7 +31,7 @@ export async function getBalance(userId: number, year = new Date().getFullYear()
 
 	const { used } = await requests()
 		.createQueryBuilder("request")
-		.select("COALESCE(SUM(request.endDate - request.startDate + 1), 0)", "used")
+		.select("COALESCE(SUM(request.days), 0)", "used")
 		.where("request.userId = :userId", { userId })
 		.andWhere("request.status IN (:...statuses)", { statuses: [RequestStatus.Pending, RequestStatus.Approved] })
 		.andWhere("EXTRACT(YEAR FROM request.startDate) = :year", { year })
@@ -40,8 +41,8 @@ export async function getBalance(userId: number, year = new Date().getFullYear()
 	return { year, allowance: user.vacationAllowance, used: usedDays, remaining: user.vacationAllowance - usedDays };
 }
 
-// Business rules 1, 2 and 4, plus the yearly allowance.
-async function assertCanBook(userId: number, startDate: string, endDate: string): Promise<void> {
+// Business rules 1, 2 and 4, plus the yearly allowance. Returns the working days the request would use.
+async function assertCanBook(userId: number, startDate: string, endDate: string): Promise<number> {
 	assertValidDates(startDate, endDate);
 
 	const overlaps = await requests().existsBy({
@@ -55,19 +56,23 @@ async function assertCanBook(userId: number, startDate: string, endDate: string)
 	}
 
 	const year = Number(startDate.slice(0, 4));
+	const days = countWorkingDays(startDate, endDate, await getWorkCalendar());
+	assertHasWorkingDays(days);
 	const { remaining } = await getBalance(userId, year);
-	assertEnoughDays(countDays(startDate, endDate), remaining, year);
+	assertEnoughDays(days, remaining, year);
+	return days;
 }
 
 // Checks the business rules, saves a new Pending request, and announces it with an event.
 export async function createRequest(userId: number, input: CreateRequestInput) {
-	await assertCanBook(userId, input.startDate, input.endDate);
+	const days = await assertCanBook(userId, input.startDate, input.endDate);
 
 	const saved = await requests().save(
 		requests().create({
 			userId,
 			startDate: input.startDate,
 			endDate: input.endDate,
+			days,
 			reason: input.reason || null
 		})
 	);
@@ -133,4 +138,24 @@ export function rejectRequest(id: number, comment: string) {
 // cancelled requests do not count in the balance or in the overlap check.
 export function cancelRequest(id: number, userId: number) {
 	return changePendingRequest(id, userId, RequestStatus.Cancelled, null, VacationEvent.Cancelled);
+}
+
+// Approved vacations that overlap [from, to]. By default: everything that has not ended yet.
+export async function listTeamVacations({ from = today(), to }: TeamVacationsInput) {
+	const approved = await requests().find({
+		where: {
+			status: RequestStatus.Approved,
+			endDate: MoreThanOrEqual(from),
+			...(to && { startDate: LessThanOrEqual(to) })
+		},
+		relations: { user: true },
+		order: { startDate: "ASC", id: "ASC" }
+	});
+
+	return approved.map((request) => ({
+		id: request.id,
+		userName: request.user.name,
+		startDate: request.startDate,
+		endDate: request.endDate
+	}));
 }
