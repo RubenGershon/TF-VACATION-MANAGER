@@ -5,6 +5,7 @@ import DashboardView from '../views/DashboardView.vue'
 import LoginView from '../views/LoginView.vue'
 import MyRequestsView from '../views/MyRequestsView.vue'
 import TeamView from '../views/TeamView.vue'
+import CalendarSettingsView from '../views/CalendarSettingsView.vue'
 
 const REQUESTER = 'REQUESTER'
 const VALIDATOR = 'VALIDATOR'
@@ -22,8 +23,7 @@ const routes = [
   { path: '/my-requests', component: MyRequestsView, meta: { role: REQUESTER } },
   { path: '/dashboard', component: DashboardView, meta: { role: VALIDATOR } },
   { path: '/team', component: TeamView },
-  // Placeholder for the pages that do not exist yet
-  { path: '/:pathMatch(.*)*', component: { template: '<h1 class="p-6 text-xl font-semibold">Coming soon</h1>' } },
+  { path: '/calendar-settings', component: CalendarSettingsView, meta: { role: VALIDATOR } },
 ]
 
 const router = createRouter({
