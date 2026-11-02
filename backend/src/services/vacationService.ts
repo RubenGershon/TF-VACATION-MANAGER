@@ -1,9 +1,10 @@
-// Vacation request logic: creating, listing and cancelling requests, and the balance.
+// Vacation request logic: creating, listing, approving, rejecting and cancelling requests, and the balance.
 import { FindOptionsWhere, In, LessThanOrEqual, MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "../db/dataSource";
 import { User } from "../entities/User";
 import { RequestStatus, VacationRequest } from "../entities/VacationRequest";
 import { conflict, notFound, unauthorized } from "../errors/AppError";
+import { VacationEvent, VacationEventPayload, vacationEvents } from "../events/vacationEvents";
 import { CreateRequestInput, ListRequestsInput } from "../schemas/requestSchemas";
 import { countDays } from "../utils/dates";
 import { pageToSkip, toPage } from "../utils/pagination";
@@ -11,6 +12,12 @@ import { toDto } from "./vacationDto";
 import { assertEnoughDays, assertValidDates } from "./vacationRules";
 
 const requests = () => AppDataSource.getRepository(VacationRequest);
+
+// Tells the rest of the app that something happened, without knowing who listens (see events/).
+function emit(event: VacationEvent, request: VacationRequest): void {
+	const payload: VacationEventPayload = { requestId: request.id, userId: request.userId };
+	vacationEvents.emit(event, payload);
+}
 
 // Vacation days of a year: the allowance, the days already booked, and what is left.
 // Pending requests count as used, so a user cannot book more days while waiting for an answer.
@@ -52,7 +59,7 @@ async function assertCanBook(userId: number, startDate: string, endDate: string)
 	assertEnoughDays(countDays(startDate, endDate), remaining, year);
 }
 
-// Checks the business rules and saves a new Pending request.
+// Checks the business rules, saves a new Pending request, and announces it with an event.
 export async function createRequest(userId: number, input: CreateRequestInput) {
 	await assertCanBook(userId, input.startDate, input.endDate);
 
@@ -65,7 +72,9 @@ export async function createRequest(userId: number, input: CreateRequestInput) {
 		})
 	);
 
-	return toDto(await requests().findOneOrFail({ where: { id: saved.id }, relations: { user: true } }));
+	const request = await requests().findOneOrFail({ where: { id: saved.id }, relations: { user: true } });
+	emit(VacationEvent.Requested, request);
+	return toDto(request);
 }
 
 // One query for the page and one for the total, both done by the database.
@@ -88,7 +97,13 @@ export function listRequests({ page, limit, status, userId }: ListRequestsInput)
 
 // Business rules 3 and 5: only a pending request can change, so approved ones never change.
 // With an ownerId, the request must also belong to that user. Someone else's request is "not found".
-async function changePendingRequest(id: number, ownerId: number | undefined, status: RequestStatus, comments: string | null) {
+async function changePendingRequest(
+	id: number,
+	ownerId: number | undefined,
+	status: RequestStatus,
+	comments: string | null,
+	event: VacationEvent
+) {
 	const found = await requests().findOneBy({ id, ...(ownerId && { userId: ownerId }) });
 	if (!found) {
 		throw notFound("Request not found");
@@ -100,11 +115,22 @@ async function changePendingRequest(id: number, ownerId: number | undefined, sta
 	found.status = status;
 	found.comments = comments;
 	await requests().save(found);
-	return toDto(await requests().findOneOrFail({ where: { id }, relations: { user: true } }));
+
+	const request = await requests().findOneOrFail({ where: { id }, relations: { user: true } });
+	emit(event, request);
+	return toDto(request);
+}
+
+export function approveRequest(id: number) {
+	return changePendingRequest(id, undefined, RequestStatus.Approved, null, VacationEvent.Approved);
+}
+
+export function rejectRequest(id: number, comment: string) {
+	return changePendingRequest(id, undefined, RequestStatus.Rejected, comment, VacationEvent.Rejected);
 }
 
 // The requester withdraws their own pending request. The days are given back, because
 // cancelled requests do not count in the balance or in the overlap check.
 export function cancelRequest(id: number, userId: number) {
-	return changePendingRequest(id, userId, RequestStatus.Cancelled, null);
+	return changePendingRequest(id, userId, RequestStatus.Cancelled, null, VacationEvent.Cancelled);
 }

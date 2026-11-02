@@ -67,6 +67,18 @@ describe("Vacation business rules", () => {
 		assert.equal((await book("2032-08-01", "2032-09-30")).statusCode, 400);
 	});
 
+	it("refuses to reject a request without a comment", async () => {
+		const { id } = parseBody(await book("2032-06-01", "2032-06-02"));
+		const response = await send("PUT", `/requests/${id}/reject`, { token: validatorToken, body: {} });
+		assert.equal(response.statusCode, 400);
+	});
+
+	it("does not let a requester approve a request", async () => {
+		const { id } = parseBody(await book("2032-07-01", "2032-07-02"));
+		const response = await send("PUT", `/requests/${id}/approve`, { token: requesterToken });
+		assert.equal(response.statusCode, 403);
+	});
+
 	it("lets a requester list only their own requests, even when asking for another user", async () => {
 		await book("2032-11-01", "2032-11-01");
 		const response = await send("GET", "/requests", { token: requesterToken, query: { userId: "1" } });
@@ -80,6 +92,25 @@ describe("Vacation business rules", () => {
 		const response = await send("GET", "/requests", { token: validatorToken, query: { userId: String(requesterId) } });
 		assert.equal(response.statusCode, 200);
 		assert.ok(parseBody(response).items.length > 0);
+	});
+
+	it("lets a validator approve a pending request", async () => {
+		const { id } = parseBody(await book("2032-09-06", "2032-09-07"));
+		const response = await send("PUT", `/requests/${id}/approve`, { token: validatorToken });
+		assert.equal(response.statusCode, 200);
+		assert.equal(parseBody(response).status, "APPROVED");
+	});
+
+	it("does not let an approved request be changed again", async () => {
+		const { id } = parseBody(await book("2032-10-01", "2032-10-02"));
+		const approved = await send("PUT", `/requests/${id}/approve`, { token: validatorToken });
+		assert.equal(approved.statusCode, 200);
+
+		const rejectAfter = await send("PUT", `/requests/${id}/reject`, { token: validatorToken, body: { comment: "Too late" } });
+		assert.equal(rejectAfter.statusCode, 409);
+
+		const cancelAfter = await send("PUT", `/requests/${id}/cancel`, { token: requesterToken });
+		assert.equal(cancelAfter.statusCode, 409);
 	});
 
 	it("cancels a pending request, and gives the days back", async () => {

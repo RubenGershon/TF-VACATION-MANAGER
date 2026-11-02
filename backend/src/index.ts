@@ -19,6 +19,10 @@ import { CommonEvent, LambdaEvent } from "commoneventframework/dist/types/common
 import { initDatabase } from "./db/dataSource";
 import { toErrorResponse } from "./errors/toErrorResponse";
 import { HandlerFn, InputParserFn } from "./handlers/types";
+import { registerVacationListeners } from "./events/vacationListeners";
+
+// Starts listening to vacation events once, when the server boots.
+registerVacationListeners();
 
 // Every request goes through here: find the route, parse the input, run the handler.
 // Any error thrown on the way is caught at the bottom and turned into a JSON error response.

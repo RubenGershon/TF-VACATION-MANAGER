@@ -1,8 +1,8 @@
-// Authentication: creates and reads the JWT cookie, and authenticate() checks who is calling.
+// Authentication: creates and reads the JWT cookie, and authenticate() checks who is calling and their role.
 import jwt from "jsonwebtoken";
 import { CommonEvent } from "commoneventframework/dist/types/commonEvent";
 import { Role } from "../entities/User";
-import { unauthorized } from "../errors/AppError";
+import { forbidden, unauthorized } from "../errors/AppError";
 
 export type AuthUser = {
 	id: number;
@@ -55,14 +55,19 @@ function readToken(event: CommonEvent): string {
 	return token;
 }
 
-// Call at the start of a protected handler. It returns the logged-in user, or throws a 401.
-export function authenticate(event: CommonEvent): AuthUser {
+// Call at the start of a protected handler.
+// With no roles, any logged-in user is accepted. With roles, the user must have one of them.
+export function authenticate(event: CommonEvent, ...allowedRoles: Role[]): AuthUser {
 	let user: AuthUser;
 	try {
 		const payload = jwt.verify(readToken(event), process.env.JWT_SECRET as string) as AuthUser;
 		user = { id: payload.id, name: payload.name, role: payload.role };
 	} catch {
 		throw unauthorized("Invalid or expired token");
+	}
+
+	if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+		throw forbidden();
 	}
 	return user;
 }

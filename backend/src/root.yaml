@@ -44,7 +44,7 @@ paths:
     post:
       x-handler: handlers/requests#createRequest
       x-inputParser: handlers/requests#parseCreateRequest
-      summary: Submit a vacation request
+      summary: Submit a vacation request (requester)
       responses:
         '201':
           description: Request created
@@ -81,16 +81,56 @@ paths:
   /requests/balance:
     get:
       x-handler: handlers/requests#getMyBalance
-      summary: My vacation days this year - allowance, used and remaining
+      summary: My vacation days this year - allowance, used and remaining (requester)
       responses:
         '200':
           description: Vacation balance
+
+  /requests/:id/approve:
+    put:
+      x-handler: handlers/requests#approveRequest
+      x-inputParser: handlers/requests#parseRequestId
+      summary: Approve a pending request (validator)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Request approved
+        '404':
+          description: Request not found
+        '409':
+          description: Request already decided
+
+  /requests/:id/reject:
+    put:
+      x-handler: handlers/requests#rejectRequest
+      x-inputParser: handlers/requests#parseRejectRequest
+      summary: Reject a pending request, a comment is required (validator)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Request rejected
+        '400':
+          description: Comment missing
+        '404':
+          description: Request not found
+        '409':
+          description: Request already decided
 
   /requests/:id/cancel:
     put:
       x-handler: handlers/requests#cancelRequest
       x-inputParser: handlers/requests#parseRequestId
-      summary: Cancel my own pending request
+      summary: Cancel my own pending request (requester)
       parameters:
         - in: path
           name: id

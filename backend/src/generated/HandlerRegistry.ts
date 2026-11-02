@@ -14,13 +14,16 @@ export class HandlerRegistry {
 			"handlers/auth#logout": __cef_handlers_auth.logout,
 			"handlers/auth#parseLogin": __cef_handlers_auth.parseLogin,
 			"handlers/health#getHealth": __cef_handlers_health.getHealth,
+			"handlers/requests#approveRequest": __cef_handlers_requests.approveRequest,
 			"handlers/requests#cancelRequest": __cef_handlers_requests.cancelRequest,
 			"handlers/requests#createRequest": __cef_handlers_requests.createRequest,
 			"handlers/requests#getMyBalance": __cef_handlers_requests.getMyBalance,
 			"handlers/requests#listRequests": __cef_handlers_requests.listRequests,
 			"handlers/requests#parseCreateRequest": __cef_handlers_requests.parseCreateRequest,
 			"handlers/requests#parseListRequests": __cef_handlers_requests.parseListRequests,
+			"handlers/requests#parseRejectRequest": __cef_handlers_requests.parseRejectRequest,
 			"handlers/requests#parseRequestId": __cef_handlers_requests.parseRequestId,
+			"handlers/requests#rejectRequest": __cef_handlers_requests.rejectRequest,
 		});
 	}
 }

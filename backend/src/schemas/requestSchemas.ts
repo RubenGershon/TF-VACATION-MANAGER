@@ -13,6 +13,10 @@ export const createRequestSchema = z.object({
 	reason: z.string().trim().max(500, "Reason must be 500 characters or less").optional()
 });
 
+export const rejectRequestSchema = z.object({
+	comment: z.string().trim().min(1, "A comment is required to reject a request")
+});
+
 export const requestIdSchema = z.object({
 	id: z.coerce.number().int().positive()
 });
@@ -31,4 +35,5 @@ export const listRequestsSchema = z.object({
 });
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;
+export type RejectRequestInput = z.infer<typeof rejectRequestSchema>;
 export type ListRequestsInput = z.infer<typeof listRequestsSchema>;
