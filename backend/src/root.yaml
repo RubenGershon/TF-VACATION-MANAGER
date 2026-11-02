@@ -10,3 +10,32 @@ paths:
       responses:
         '200':
           description: API and database are up
+
+  /auth/login:
+    post:
+      x-handler: handlers/auth#login
+      x-inputParser: handlers/auth#parseLogin
+      summary: Log in. The JWT is set in an HttpOnly cookie
+      responses:
+        '200':
+          description: The user
+        '401':
+          description: Invalid email or password
+
+  /auth/logout:
+    post:
+      x-handler: handlers/auth#logout
+      summary: Log out. Deletes the cookie
+      responses:
+        '200':
+          description: Cookie cleared
+
+  /me:
+    get:
+      x-handler: handlers/auth#getMe
+      summary: Current user (any role)
+      responses:
+        '200':
+          description: Current user
+        '401':
+          description: Missing or invalid token

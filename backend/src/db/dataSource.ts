@@ -2,11 +2,12 @@
 import "reflect-metadata";
 import path from "node:path";
 import { DataSource } from "typeorm";
+import { User } from "../entities/User";
 
 export const AppDataSource = new DataSource({
 	type: "postgres",
 	url: process.env.DATABASE_URL,
-	entities: [],
+	entities: [User],
 	// The schema is changed only by migration files (see src/migrations), never automatically.
 	// Pending migrations run when the app connects, so a fresh database gets its tables on first start.
 	migrations: [path.join(__dirname, "../migrations/*.{ts,js}")],

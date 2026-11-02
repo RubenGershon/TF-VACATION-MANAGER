@@ -26,4 +26,19 @@ describe("API health checks", () => {
 		const response = await send("GET", "/does-not-exist");
 		assert.equal(response.statusCode, 404);
 	});
+
+	it("returns 401 on a protected route without a cookie", async () => {
+		const response = await send("GET", "/me");
+		assert.equal(response.statusCode, 401);
+	});
+
+	it("returns 400 when the login body is invalid", async () => {
+		const response = await send("POST", "/auth/login", { body: { email: "not-an-email" } });
+		assert.equal(response.statusCode, 400);
+	});
+
+	it("returns 401 for a wrong password", async () => {
+		const response = await send("POST", "/auth/login", { body: { email: "alice@example.com", password: "wrong-password" } });
+		assert.equal(response.statusCode, 401);
+	});
 });
