@@ -1,4 +1,4 @@
-// Store module for vacation requests, balance and the requesters list.
+// Store module for vacation requests, balance, team vacations and the requesters list.
 import * as requestApi from '../../api/requestApi'
 
 // The Vuex module for request data: the current page of requests, the balance and the user filter list.
@@ -11,6 +11,7 @@ export default {
     list: { items: [], total: 0, page: 1, limit: 10 },
     loading: false,
     requesters: [],
+    teamVacations: [],
     // The requester's vacation days: { year, allowance, used, remaining }
     balance: null,
   }),
@@ -27,6 +28,9 @@ export default {
     },
     setRequesters(state, requesters) {
       state.requesters = requesters
+    },
+    setTeamVacations(state, teamVacations) {
+      state.teamVacations = teamVacations
     },
   },
 
@@ -59,6 +63,9 @@ export default {
     },
     async loadBalance({ commit }) {
       commit('setBalance', await requestApi.fetchBalance())
+    },
+    async loadTeamVacations({ commit }, params) {
+      commit('setTeamVacations', await requestApi.fetchTeamVacations(params))
     },
     async loadRequesters({ commit }) {
       commit('setRequesters', await requestApi.fetchRequesters())
