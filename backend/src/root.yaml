@@ -39,3 +39,68 @@ paths:
           description: Current user
         '401':
           description: Missing or invalid token
+
+  /requests:
+    post:
+      x-handler: handlers/requests#createRequest
+      x-inputParser: handlers/requests#parseCreateRequest
+      summary: Submit a vacation request
+      responses:
+        '201':
+          description: Request created
+        '400':
+          description: Invalid input or rule broken
+        '409':
+          description: Overlaps another request
+    get:
+      x-handler: handlers/requests#listRequests
+      x-inputParser: handlers/requests#parseListRequests
+      summary: List requests, paginated. A validator sees all requests and can filter by status and user. A requester only sees their own.
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED, CANCELLED]
+        - in: query
+          name: userId
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Page of requests
+
+  /requests/balance:
+    get:
+      x-handler: handlers/requests#getMyBalance
+      summary: My vacation days this year - allowance, used and remaining
+      responses:
+        '200':
+          description: Vacation balance
+
+  /requests/:id/cancel:
+    put:
+      x-handler: handlers/requests#cancelRequest
+      x-inputParser: handlers/requests#parseRequestId
+      summary: Cancel my own pending request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Request cancelled
+        '404':
+          description: Request not found, or not mine
+        '409':
+          description: Request is not pending

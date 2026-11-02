@@ -1,6 +1,7 @@
 // Table "users": the people who log in, their role and their yearly vacation allowance.
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { DEFAULT_VACATION_ALLOWANCE } from "../config";
+import { VacationRequest } from "./VacationRequest";
 
 // The two roles of the app. They decide which endpoints and pages a user can use.
 export enum Role {
@@ -33,4 +34,7 @@ export class User {
 
 	@CreateDateColumn({ name: "created_at" })
 	createdAt: Date;
+
+	@OneToMany(() => VacationRequest, (request) => request.user)
+	requests: VacationRequest[];
 }
